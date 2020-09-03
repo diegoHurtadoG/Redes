@@ -12,7 +12,7 @@ while True:
     print('Esperando un mensaje en el servidor')
     msg, address = dgram_socket.recvfrom(1024)
 
-    print('Mensaje recibido: ' + msg.decode())
+    print('Mensaje recibido: "' + msg.decode() + '", con direccion: ' + str(address))
     if (len(msg) > 0):
         ret = dgram_socket.sendto(msg, address)
         print('Mensaje enviado de vuelta: ' + msg.decode())
