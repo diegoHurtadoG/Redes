@@ -1,7 +1,7 @@
 import socket
 import json
 
-print("Creando socket - Servidor")
+print("Creando proxy")
 
 #Armamos el socket, el segundo parametro es tipo de conexion
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,36 +29,26 @@ while True:
         received_message = buffer.decode()
         print('-> Mensaje recibido: ' + received_message)
 
-        #Respondemos
-        #El mensaje de respuesta es el mismo que recibe pero cambiando la primera linea por el codigo de exito
-        #response_message = received_message.encode()
+        #Ver diferencia entre connect y bind, por ahi va el tema del cliente y servidor quiza.
+        #Bind dice al SO: "Cuando llegue un mensaje a ese puerto, mandaselo a este proceso"
+        #Connect le dice al SO: "Este socket se quiere conectar a esta direccion, mandale un msg"
 
-        with open("datos.json") as file:
-            data = json.load(file)
-            for datos in data["Datos"]:
-                mail = datos['Mail']
+        #No se tiene que reenviar exactamente lo que se recibe, hay que poner bien los headers y everything
 
-        mensaje = "Mensaje Bienvenida"
+        #received_message tiene el texto que recibimos del cliente y tenemos que enviar al servidor
+        #Para esto tenemos que hacer una conexion con el servidor al que queremos enviar y hacer una
+        #   mini version de lo que ya hicimos, esperar mensaje de vuelta y ese mandarselo al cliente
+# cliente -> received_message en proxy -> envia al servidor -> espera respuesta (server_msg) -> envia al cliente
 
-        response_message = 'HTTP/1.1 200 OK\r\n'\
-                           'Content-Type: text/html; charset=UTF-8\r\n' \
-                           'Content-Length: ' + str(len(mensaje) + 40) + '\r\n' \
-                           'Autor: X-' + mail + '\r\n\r\n' \
-                           '<html>\r\n' \
-                           '    <body>\r\n' \
-                           '        <p> ' + mensaje + '</p>\r\n' \
-                           '    </body>\r\n' \
-                           '</html>'
+        #Recibimos -> armamos la consulta (como en el servidor) -> enviamos, recibimos, armamos y mostramos
 
-        connection.send(response_message.encode())
-        print('LLegue aqui')
+        connection.send(server_msg.encode())
 
         #Esperamos el siguiente mensaje
         #Esto de aqui abajo lo hice para que despues de cargar un request, no se quede pegado en el while
         #   porque si no lo hacia, no cargaba la pagina
         buffer = ''
 
-        # El problema del browser es que se me queda pegado en el while
 
     #Cerramos la conexion
     #Notar que el puerto que se va a imprimir no va a ser el 8888
