@@ -32,9 +32,10 @@ while True:
         received_message = buffer.decode()
         print('-> Mensaje recibido: ' + received_message)
 
-        #Esto de abajo si falla, ponerlo despues del decode y con received_message en vez de buffer
+
         primera_linea = received_message.split('\n')[0]
-        url = primera_linea.split(' ')[1]
+        url = primera_linea.split(' ')[1] #Aqui tengo http://anakena.dcc.uchile.cl/
+
 
         #Teniendo esto hay que llegar hasta el address del destino:
         http_pos = url.find("://") # Posicion del ://
@@ -62,11 +63,18 @@ while True:
             port = int((buf[(dest_port_pos + 1):])[:webserver_pos-dest_port_pos-1])
             webserver = buf[:dest_port_pos]
 
+        print('Primera linea es: ' + primera_linea) #GET http://anakena.dcc.uchile.cl:8989/ HTTP/1.1
+        print('El url es: ' + url) #http://anakena.dcc.uchile.cl:8989/
+        print('Posicion del :// ' + str(http_pos)) #4
+        print('Webserver es: ' + webserver) #anakena.dcc.uchile.cl
+        print('Port es: ' + str(port)) #8989
+
+
         #Creamos el socket para el server, segundo parametro cambiable si no funciona
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.connect((webserver, port))
 
-        server_socket.send(received_message)
+        server_socket.send(received_message.encode())
 
         while True:
             #Recibimos datos desde el webserver
