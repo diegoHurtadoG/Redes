@@ -1,0 +1,22 @@
+{
+  "Datos": [
+    {
+      "user": "diegohurtado@ug.uchile.cl",
+      "blocked": [
+        "http://www.dcc.uchile.cl",
+        "http://anakena.dcc.uchile.cl:8989/secret/"
+      ],
+      "forbidden_words": [
+        {
+          "Lorem": "bleuh"
+        },
+        {
+          "ipsum": "blauh"
+        },
+        {
+          "amet": "blah"
+        }
+      ]
+    }
+    ]
+}

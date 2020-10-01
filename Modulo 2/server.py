@@ -1,4 +1,5 @@
 import socket
+import json
 
 print("Creando socket - Servidor")
 
@@ -28,19 +29,34 @@ while True:
         received_message = buffer.decode()
         print('-> Mensaje recibido: ' + received_message)
 
-        #Aqui hacer validacion de si lo que recibo es HTTP
-        #con curl, pero sin el -I funciona, estudiar eso.
-
         #Respondemos
         #El mensaje de respuesta es el mismo que recibe pero cambiando la primera linea por el codigo de exito
-        #response_message = 'Mensaje Bienvenida'.encode()
-        response_message = received_message.encode()
-        connection.send(response_message)
+        #response_message = received_message.encode()
+
+        with open("datos.json") as file:
+            data = json.load(file)
+            for datos in data["Datos"]:
+                mail = datos['Mail']
+
+        mensaje = "Mensaje Bienvenida"
+
+        response_message = 'HTTP/1.1 200 OK\r\n'\
+                           'Content-Type: text/html; charset=UTF-8\r\n' \
+                           'Content-Length: ' + str(len(mensaje) + 40) + '\r\n' \
+                           'Autor: X-' + mail + '\r\n\r\n' \
+                           '<html>\r\n' \
+                           '    <body>\r\n' \
+                           '        <p> ' + mensaje + '</p>\r\n' \
+                           '    </body>\r\n' \
+                           '</html>'
+
+        connection.send(response_message.encode())
         print('LLegue aqui')
 
         #Esperamos el siguiente mensaje
-        #Si no hay mas mensajes, len(buffer) = 0 y salimos del while
-        buffer = connection.recv(1024)
+        #Esto de aqui abajo lo hice para que despues de cargar un request, no se quede pegado en el while
+        #   porque si no lo hacia, no cargaba la pagina
+        buffer = ''
 
         # El problema del browser es que se me queda pegado en el while
 
