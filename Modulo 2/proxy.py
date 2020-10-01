@@ -69,6 +69,7 @@ while True:
         print('Webserver es: ' + webserver) #anakena.dcc.uchile.cl
         print('Port es: ' + str(port)) #8989
 
+        #Al servidor le mando el mensaje tal cual
 
         #Creamos el socket para el server, segundo parametro cambiable si no funciona
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -79,8 +80,39 @@ while True:
         while True:
             #Recibimos datos desde el webserver
             data = server_socket.recv(1024)
+
             if (len(data) > 0):
-                connection.send(data) #manda al browser/cliente
+                msg_vuelta = data.decode()
+
+                #Se chequea bien el mensaje para las restricciones
+                with open("prueba.json") as file:
+                    data = json.load(file)
+
+                    for info in data["Datos"]:
+                        blocked = info["blocked"]
+                        mail = info["user"]
+                        words = info["forbidden_words"]
+
+                    if url in blocked:  # Si la URL esta bloqueada, 403 + error
+                        parsed_msg = msg_vuelta.split('\r\n')
+                        parsed_msg[0] = 'HTTP/1.1 403 Forbidden'
+                        for x in range(len(parsed_msg)):
+                            parsed_msg[x] += '\r\n'
+                        aux = ''
+                        msg_vuelta = aux.join(parsed_msg)
+                        print('El mensaje de prohibicion es: ' + msg_vuelta)
+
+                    else:  # Si no se bloquea, agregar header.
+                        header = 'Autor: ' + mail
+                        parsed_msg = msg_vuelta.split('\r\n')
+                        parsed_msg.insert(1, header)
+                        for x in range(len(parsed_msg)):
+                            parsed_msg[x] += '\r\n'
+                        aux = ''
+                        msg_vuelta = aux.join(parsed_msg)  # En teoria es el mismo mensaje solo con esa linea agregada
+                        print('El nuevo mensaje es: ' + msg_vuelta)
+                        
+                connection.send(msg_vuelta.encode()) #manda al browser/cliente
             else:
                 break
 
