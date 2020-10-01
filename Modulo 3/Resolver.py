@@ -10,3 +10,14 @@
 
 # Parsing se puede hacer con libreria
 
+import socket
+from dnslib import DNSRecord
+
+forward_addr = ("8.8.8.8", 53)
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+qname = "example.com"
+q = DNSRecord.question(qname)
+client.sendto(bytes(q.pack()), forward_addr)
+data, _= client.recvfrom(4096)
+d = DNSRecord.parse(data)
+print("r", str(d.rr))
