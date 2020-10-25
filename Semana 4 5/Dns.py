@@ -49,3 +49,4 @@ print(send_dns_message('8.8.8.8', 53))
 #   ElRDDATA que recibimos es 5d b8 d8 22 -> 93.184.216.34 direccion ip.
 
 # Con dig -p53 @8.8.8.8 "example.com" recibo la respuesta mas ordenada
+
