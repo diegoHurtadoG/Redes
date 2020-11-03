@@ -30,7 +30,7 @@ dgram_socket.bind(('localhost', 5000))
 
 ## Aqui empieza el handshake (El while True de afuera)
 while True:
-    print("Partiendo el handshake...")
+    print("Iteracion de Handshake en el receptor... ")
     msg_hand_json, address = dgram_socket.recvfrom(1024)
     print("Mensaje handshake recibido: ", msg_hand_json.decode())
     msg_hand = json.loads(msg_hand_json.decode())
@@ -53,9 +53,17 @@ while True:
 
     while True:
         print('Esperando un mensaje en el servidor')
-        msg, address = dgram_socket.recvfrom(1024)
+        msg_json, address = dgram_socket.recvfrom(1024)
 
-        print('Mensaje recibido: "' + msg.decode() + '", con direccion: ' + str(address))
+        print('Mensaje recibido: "' + msg_json.decode() + '", con direccion: ' + str(address))
+
+        msg = json.loads(msg_json.decode())
+
         if (len(msg) > 0):
-            ret = dgram_socket.sendto(msg, address)
-            print('Mensaje enviado de vuelta: ' + msg.decode())
+            if(msg["Tipo"] == "Contenido"):
+                ret_msg = addHeader(msg["Mensaje"], "Contenido", msg["Numero"] + 1)
+            else:
+                ret_msg = addHeader("Repetir", "Error", "500")
+
+            ret = dgram_socket.sendto(ret_msg.encode(), address)
+            print('Mensaje enviado de vuelta: ' + ret_msg)

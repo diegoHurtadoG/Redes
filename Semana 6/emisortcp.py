@@ -13,6 +13,9 @@
 # SYN + ACK <-
 # ACK       ->
 
+#Si es muy chico se cae, no deberia
+TAMANO_PAQUETE = 1024
+
 import socket
 import json
 import random
@@ -20,16 +23,29 @@ import random
 #Creamos el socket como udp
 import sys
 
-def stopAndWait(sock, msg, address):
+#Ultimo parametro es 0 si es parte del handshake, 1 si no
+def stopAndWait(sock, msg, address, hs = 1, i = 1):
     while True:
         try:
-            #addHeader(msg, "Contenido", 0000) #todo
-            sock.sendto(msg, address)
-            retmsg, retaddress = sock.recvfrom(64) #Cambiar esto para que sean mensajes mas grande
+            if hs == 1:
+                send_msg = addHeader(msg, "Contenido", i*TAMANO_PAQUETE)
+            else:
+                send_msg = msg
+
+            print('Enviando mensaje: ' + send_msg)
+
+            sock.sendto(send_msg.encode(), address)
+            retmsg, retaddress = sock.recvfrom(TAMANO_PAQUETE) #Cambiar esto para que sean mensajes mas grande
+
+            print('Recibido el mensaje: ' + retmsg.decode())
+            json_respuesta = json.loads(retmsg.decode())
+
+            if (json_respuesta["Numero"] == (i*TAMANO_PAQUETE + 1)):
+                i += 1
+
             return retmsg, retaddress
         except socket.timeout as e:
             #Aqui deberia hacerle algun cambio al mensaje para que sepa que no es primera vez que mando
-            #Sin loss, funciona, con loss se cae (el error esta aqui)
             continue
 
 
@@ -50,29 +66,29 @@ def handshake(socket, address):
     numero_ack = random.randint(0, 1000000)
     msg_json = addHeader("", "ACK", numero_ack)
 
-    print("Enviando primer mensaje de handshake: ", msg_json)
+    #print("Enviando primer mensaje de handshake: ", msg_json)
 
-    respuesta, dirret = stopAndWait(socket, msg_json.encode(), address)
+    respuesta, dirret = stopAndWait(socket, msg_json, address, 0)
 
-    print("Recibida respuesta de handshake: ", respuesta.decode())
+    #print("Recibida respuesta de handshake: ", respuesta.decode())
 
     json_respuesta = json.loads(respuesta.decode())
     if((json_respuesta["Tipo"] == "ACK + SYN") and (json_respuesta["Numero"] == numero_ack + 1)):
         #Si entre a este if me falta mandar el syn de vuelta
         msg_syn = addHeader(json_respuesta["Mensaje"] + 1, "SYN", None)
-        print("Enviando mensaje SYN del handshake: ", msg_syn)
-        final, dirRet = stopAndWait(socket, msg_syn.encode(), address)
+        #print("Enviando mensaje SYN del handshake: ", msg_syn)
+        final, dirRet = stopAndWait(socket, msg_syn, address, 0)
     else:
         final = "No se completo handshake"
 
     return final
 
-
+################################################
 
 cdgram_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 cdgram_socket.settimeout(0.01)
 
-#Aqui hago el handshako
+#Aqui hago el handshake
 aprobacion_json = handshake(cdgram_socket, ('localhost', 5000))
 aprobacion_json_decoded = aprobacion_json.decode()
 aprobacion = json.loads(aprobacion_json_decoded)
@@ -87,21 +103,11 @@ data = sys.stdin.readlines()
 for line in data:
 
     #Creamos el mensaje
-    send_message = line.encode()
-
-    print('Enviando mensaje: ' + send_message.decode())
+    send_message = line
 
     #Esto de aqui abajo incluye el send y el recv
     msg, address = stopAndWait(cdgram_socket, send_message, ('localhost', 5000))
 
-    # Enviamos el mensaje
-    #cdgram_socket.sendto(send_message, ('localhost', 5000))
-
-    # Esperamos la respuesta echo
-    #msg, address = cdgram_socket.recvfrom(1024)
-
-    #Imprimimos la respuesta echo
-    print('Reibido el mensaje: ' + msg.decode())
 
 #Cerramos el socket
 cdgram_socket.close()
